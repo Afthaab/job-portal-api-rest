@@ -33,17 +33,10 @@ func (h *handler) Signin(c *gin.Context) {
 		return
 	}
 
-	if err != nil {
-		log.Error().Err(err).Str("trace id", traceid)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "please provide valid email and password",
-		})
-		return
-	}
 	token, err := h.service.UserSignIn(ctx, userData)
 	if err != nil {
 		log.Error().Err(err).Str("trace id", traceid)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -89,7 +82,7 @@ func (h *handler) SignUp(c *gin.Context) {
 	userDetails, err := h.service.UserSignup(ctx, userData)
 	if err != nil {
 		log.Error().Err(err).Str("trace id", traceid)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
 		return
