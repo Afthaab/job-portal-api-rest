@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/afthaab/job-portal/internal/auth"
@@ -53,6 +54,78 @@ func Test_handler_AddCompany(t *testing.T) {
 			},
 			expectedStatusCode: http.StatusUnauthorized,
 			expectedResponse:   `{"error":"Unauthorized"}`,
+		},
+		{
+			name: "error in validating the json",
+			setup: func() (*gin.Context, *httptest.ResponseRecorder, service.UserService) {
+				rr := httptest.NewRecorder()
+				c, _ := gin.CreateTestContext(rr)
+				httpRequest, _ := http.NewRequest(http.MethodGet, "http://test.com:8080", strings.NewReader(`{"name":"junior web developer",
+				"location": "bangalore",
+				"field": "it}`))
+				ctx := httpRequest.Context()
+				ctx = context.WithValue(ctx, middleware.TraceIDKey, "123")
+				ctx = context.WithValue(ctx, auth.Key, jwt.RegisteredClaims{})
+				httpRequest = httpRequest.WithContext(ctx)
+				c.Request = httpRequest
+
+				mc := gomock.NewController(t)
+				ms := mockmodels.NewMockUserService(mc)
+
+				return c, rr, ms
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedResponse:   `{"error":"please provide valid name, location and field"}`,
+		},
+		{
+			name: "error from service layer",
+			setup: func() (*gin.Context, *httptest.ResponseRecorder, service.UserService) {
+				rr := httptest.NewRecorder()
+				c, _ := gin.CreateTestContext(rr)
+				httpRequest, _ := http.NewRequest(http.MethodGet, "http://test.com:8080", strings.NewReader(`{"name":"junior web developer",
+				"location": "bangalore",
+				"field": "it"}`))
+				ctx := httpRequest.Context()
+				ctx = context.WithValue(ctx, middleware.TraceIDKey, "123")
+				ctx = context.WithValue(ctx, auth.Key, jwt.RegisteredClaims{})
+				httpRequest = httpRequest.WithContext(ctx)
+				c.Request = httpRequest
+
+				mc := gomock.NewController(t)
+				ms := mockmodels.NewMockUserService(mc)
+				ms.EXPECT().AddCompanyDetails(c.Request.Context(), gomock.Any()).Return(models.Company{}, errors.New("test error from mock function"))
+
+				return c, rr, ms
+			},
+			expectedStatusCode: http.StatusInternalServerError,
+			expectedResponse:   `{"error":"test error from mock function"}`,
+		},
+		{
+			name: "success case",
+			setup: func() (*gin.Context, *httptest.ResponseRecorder, service.UserService) {
+				rr := httptest.NewRecorder()
+				c, _ := gin.CreateTestContext(rr)
+				httpRequest, _ := http.NewRequest(http.MethodGet, "http://test.com:8080", strings.NewReader(`{"name":"junior web developer",
+				"location": "bangalore",
+				"field": "it"}`))
+				ctx := httpRequest.Context()
+				ctx = context.WithValue(ctx, middleware.TraceIDKey, "123")
+				ctx = context.WithValue(ctx, auth.Key, jwt.RegisteredClaims{})
+				httpRequest = httpRequest.WithContext(ctx)
+				c.Request = httpRequest
+
+				mc := gomock.NewController(t)
+				ms := mockmodels.NewMockUserService(mc)
+				ms.EXPECT().AddCompanyDetails(c.Request.Context(), gomock.Any()).Return(models.Company{
+					Name:     "junior web developer",
+					Location: "bangalore",
+					Field:    "it",
+				}, nil)
+
+				return c, rr, ms
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedResponse:   `{"ID":0,"CreatedAt":"0001-01-01T00:00:00Z","UpdatedAt":"0001-01-01T00:00:00Z","DeletedAt":null,"name":"junior web developer","location":"bangalore","field":"it"}`,
 		},
 	}
 	for _, tt := range tests {

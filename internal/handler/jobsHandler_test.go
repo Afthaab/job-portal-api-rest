@@ -440,7 +440,6 @@ func Test_handler_AddJobs(t *testing.T) {
 				ctx = context.WithValue(ctx, auth.Key, jwt.RegisteredClaims{})
 				httpRequest = httpRequest.WithContext(ctx)
 				c.Params = append(c.Params, gin.Param{Key: "id", Value: "123"})
-
 				c.Request = httpRequest
 
 				mc := gomock.NewController(t)

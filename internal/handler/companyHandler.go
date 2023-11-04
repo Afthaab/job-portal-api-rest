@@ -123,7 +123,7 @@ func (h *handler) AddCompany(c *gin.Context) {
 	companyData, err = h.service.AddCompanyDetails(ctx, companyData)
 	if err != nil {
 		log.Error().Err(err).Str("trace id", traceid)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
 		return
