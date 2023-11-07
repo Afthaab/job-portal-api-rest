@@ -1,6 +1,8 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type Jobs struct {
 	gorm.Model
@@ -9,13 +11,13 @@ type Jobs struct {
 	Jobname         string            `json:"jobname" validate:"required"`
 	MinNoticePeriod string            `json:"min_notice_period" validate:"required"`
 	MaxNoticePeriod string            `json:"max_notice_period" validate:"required"`
-	Location        []Location        `json:"location" gorm:"many2many:job_location;"`
-	TechnologyStack []TechnologyStack `json:"technology_stack" gorm:"many2many:job_techstack;"`
+	Location        []Location        `json:"-" gorm:"many2many:job_location;"`
+	TechnologyStack []TechnologyStack `json:"-" gorm:"many2many:job_techstack;"`
 	Description     string            `json:"description" validate:"required"`
 	MinExperience   string            `json:"min_experience" validate:"required"`
 	MaxExperience   string            `json:"max_experience" validate:"required"`
-	Qualifications  []Qualification   `json:"qualifications" gorm:"many2many:job_qualification;"`
-	Shift           []Shift           `json:"shift" gorm:"many2many:job_shift;" `
+	Qualifications  []Qualification   `json:"-" gorm:"many2many:job_qualification;"`
+	Shift           []Shift           `json:"-" gorm:"many2many:job_shift;" `
 	Jobtype         string            `json:"jobtype" validate:"required"`
 }
 

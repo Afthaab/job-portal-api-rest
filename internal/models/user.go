@@ -14,10 +14,3 @@ type User struct {
 	Email        string `json:"email" gorm:"unique"`
 	PasswordHash string `json:"-"`
 }
-
-type UserApplication struct {
-	Name          string `json:"name"`
-	InstituteName string `json:"institute_name"`
-	Jid           uint   `json:"jid"`
-	Jobs          Jobs   `json:"job_application"`
-}

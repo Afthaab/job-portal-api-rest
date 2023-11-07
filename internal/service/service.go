@@ -6,6 +6,7 @@ import (
 
 	"github.com/afthaab/job-portal/internal/auth"
 	"github.com/afthaab/job-portal/internal/models"
+	newModels "github.com/afthaab/job-portal/internal/models/requestModels"
 	"github.com/afthaab/job-portal/internal/repository"
 )
 
@@ -25,9 +26,11 @@ type UserService interface {
 	ViewCompanyDetails(ctx context.Context, cid uint64) (models.Company, error)
 	ViewJob(ctx context.Context, cid uint64) ([]models.Jobs, error)
 
-	AddJobDetails(ctx context.Context, jobData models.Jobs, cid uint64) (models.Jobs, error)
+	AddJobDetails(ctx context.Context, jobData newModels.NewJobs, cid uint64) (models.Jobs, error)
 	ViewAllJobs(ctx context.Context) ([]models.Jobs, error)
 	ViewJobById(ctx context.Context, jid uint64) (models.Jobs, error)
+
+	ProccessApplication(ctx context.Context, applicationData []newModels.NewUserApplication) ([]newModels.NewUserApplication, error)
 }
 
 func NewService(userRepo repository.UserRepo, a auth.Authentication) (UserService, error) {

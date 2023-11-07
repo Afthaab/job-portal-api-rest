@@ -2,13 +2,12 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/afthaab/job-portal/internal/auth"
 	"github.com/afthaab/job-portal/internal/middleware"
-	"github.com/afthaab/job-portal/internal/models"
+	newModels "github.com/afthaab/job-portal/internal/models/requestModels"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
@@ -40,9 +39,9 @@ func (h *handler) AddJobs(c *gin.Context) {
 		return
 	}
 
-	var jobData models.Jobs
+	var bodyJobData newModels.NewJobs
 
-	err = json.NewDecoder(c.Request.Body).Decode(&jobData)
+	err = json.NewDecoder(c.Request.Body).Decode(&bodyJobData)
 	if err != nil {
 		log.Error().Err(err).Str("trace id", traceid)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -52,7 +51,7 @@ func (h *handler) AddJobs(c *gin.Context) {
 	}
 
 	validate := validator.New()
-	err = validate.Struct(jobData)
+	err = validate.Struct(bodyJobData)
 	if err != nil {
 		log.Error().Err(err).Str("trace id", traceid)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -61,9 +60,7 @@ func (h *handler) AddJobs(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("////////////", jobData)
-
-	jobData, err = h.service.AddJobDetails(ctx, jobData, cid)
+	jobData, err := h.service.AddJobDetails(ctx, bodyJobData, cid)
 	if err != nil {
 		log.Error().Err(err).Str("trace id", traceid)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{

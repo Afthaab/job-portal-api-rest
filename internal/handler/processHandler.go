@@ -6,7 +6,7 @@ import (
 
 	"github.com/afthaab/job-portal/internal/auth"
 	"github.com/afthaab/job-portal/internal/middleware"
-	"github.com/afthaab/job-portal/internal/models"
+	newModels "github.com/afthaab/job-portal/internal/models/requestModels"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rs/zerolog/log"
@@ -29,13 +29,22 @@ func (h *handler) ProcessApplication(c *gin.Context) {
 		return
 	}
 
-	var applicationData []models.UserApplication
+	var applicationData []newModels.NewUserApplication
 
 	err := json.NewDecoder(c.Request.Body).Decode(&applicationData)
 	if err != nil {
 		log.Error().Err(err).Str("trace id", traceid)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "please provide valid email and password",
+		})
+		return
+	}
+
+	applicationData, err = h.service.ProccessApplication(ctx, applicationData)
+	if err != nil {
+		log.Error().Err(err).Str("trace id", traceid)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": err,
 		})
 		return
 	}
