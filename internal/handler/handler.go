@@ -23,6 +23,7 @@ type Handerfuncs interface {
 	ViewAllJobs(c *gin.Context)
 	ViewJob(c *gin.Context)
 	AddJobs(c *gin.Context)
+	ProcessApplication(c *gin.Context)
 }
 
 func NewHandler(svc service.UserService) (Handerfuncs, error) {

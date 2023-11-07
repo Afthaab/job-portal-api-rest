@@ -8,9 +8,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (r *Repo) ViewJobDetailsBy(ctx context.Context, jid uint64) (models.Jobs, error) {
-	var jobData models.Jobs
-	result := r.db.Where("id = ?", jid).Find(&jobData)
+func (r *Repo) CreateJob(ctx context.Context, jobData models.Jobs) (models.Jobs, error) {
+	result := r.db.Create(&jobData)
 	if result.Error != nil {
 		log.Info().Err(result.Error).Send()
 		return models.Jobs{}, errors.New("could not create the jobs")
@@ -18,8 +17,9 @@ func (r *Repo) ViewJobDetailsBy(ctx context.Context, jid uint64) (models.Jobs, e
 	return jobData, nil
 }
 
-func (r *Repo) CreateJob(ctx context.Context, jobData models.Jobs) (models.Jobs, error) {
-	result := r.db.Create(&jobData)
+func (r *Repo) ViewJobDetailsBy(ctx context.Context, jid uint64) (models.Jobs, error) {
+	var jobData models.Jobs
+	result := r.db.Where("id = ?", jid).Find(&jobData)
 	if result.Error != nil {
 		log.Info().Err(result.Error).Send()
 		return models.Jobs{}, errors.New("could not create the jobs")
