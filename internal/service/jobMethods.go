@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (s *Service) AddJobDetails(ctx context.Context, bodyjobData newModels.NewJobs, cid uint64) (models.Jobs, error) {
+func (s *Service) AddJobDetails(ctx context.Context, bodyjobData newModels.NewJobs, cid uint64) (newModels.ResponseNewJobs, error) {
 	jobData := models.Jobs{
 		Cid:             uint(cid),
 		Jobname:         bodyjobData.Jobname,
@@ -19,18 +19,12 @@ func (s *Service) AddJobDetails(ctx context.Context, bodyjobData newModels.NewJo
 		MinExperience:   bodyjobData.MinExperience,
 		MaxExperience:   bodyjobData.MaxExperience,
 	}
-	for _, v := range bodyjobData.Location {
-		tempLocation := models.Location{
-			Model: gorm.Model{
-				ID: v.PlaceId,
-			},
-		}
-		jobData.Location = append(jobData.Location, tempLocation)
-	}
+	jobData.Location = getLocations(bodyjobData.Location)
+
 	for _, v := range bodyjobData.Qualifications {
 		tempQualifications := models.Qualification{
 			Model: gorm.Model{
-				ID: v.QualificationId,
+				ID: v,
 			},
 		}
 		jobData.Qualifications = append(jobData.Qualifications, tempQualifications)
@@ -38,7 +32,7 @@ func (s *Service) AddJobDetails(ctx context.Context, bodyjobData newModels.NewJo
 	for _, v := range bodyjobData.TechnologyStack {
 		tempTechStack := models.TechnologyStack{
 			Model: gorm.Model{
-				ID: v.StackId,
+				ID: v,
 			},
 		}
 		jobData.TechnologyStack = append(jobData.TechnologyStack, tempTechStack)
@@ -46,17 +40,29 @@ func (s *Service) AddJobDetails(ctx context.Context, bodyjobData newModels.NewJo
 	for _, v := range bodyjobData.Shift {
 		tempShift := models.Shift{
 			Model: gorm.Model{
-				ID: v.ShiftId,
+				ID: v,
 			},
 		}
 		jobData.Shift = append(jobData.Shift, tempShift)
 	}
 
-	jobData, err := s.UserRepo.CreateJob(ctx, jobData)
+	responseData, err := s.UserRepo.CreateJob(ctx, jobData)
 	if err != nil {
-		return models.Jobs{}, err
+		return responseData, err
 	}
-	return jobData, nil
+	return responseData, nil
+}
+
+func getLocations(locationIds []uint) (locationData []models.Location) {
+	for _, v := range locationIds {
+		tempLocation := models.Location{
+			Model: gorm.Model{
+				ID: v,
+			},
+		}
+		locationData = append(locationData, tempLocation)
+	}
+	return locationData
 }
 
 func (s *Service) ViewJobById(ctx context.Context, jid uint64) (models.Jobs, error) {

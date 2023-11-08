@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/afthaab/job-portal/internal/models"
+	newModels "github.com/afthaab/job-portal/internal/models/requestModels"
 	"gorm.io/gorm"
 )
 
@@ -22,10 +23,12 @@ type UserRepo interface {
 	ViewCompanies(ctx context.Context) ([]models.Company, error)
 	ViewCompanyById(ctx context.Context, cid uint64) (models.Company, error)
 
-	CreateJob(ctx context.Context, jobData models.Jobs) (models.Jobs, error)
+	CreateJob(ctx context.Context, jobData models.Jobs) (newModels.ResponseNewJobs, error)
 	FindJob(ctx context.Context, cid uint64) ([]models.Jobs, error)
 	FindAllJobs(ctx context.Context) ([]models.Jobs, error)
 	ViewJobDetailsBy(ctx context.Context, jid uint64) (models.Jobs, error)
+
+	GetTheJobData(jobid uint) (models.Jobs, error)
 }
 
 func NewRepository(db *gorm.DB) (UserRepo, error) {

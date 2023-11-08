@@ -5,16 +5,39 @@ import (
 	"errors"
 
 	"github.com/afthaab/job-portal/internal/models"
+	newModels "github.com/afthaab/job-portal/internal/models/requestModels"
 	"github.com/rs/zerolog/log"
 )
 
-func (r *Repo) CreateJob(ctx context.Context, jobData models.Jobs) (models.Jobs, error) {
+func (r *Repo) GetTheJobData(jobid uint) (models.Jobs, error) {
+	var jobData models.Jobs
+
+	// Preload related data using GORM's Preload method
+	result := r.db.Preload("Company").
+		Preload("Location").
+		Preload("TechnologyStack").
+		Preload("Qualifications").
+		Preload("Shift").
+		Where("id = ?", jobid).
+		Find(&jobData)
+
+	if result.Error != nil {
+		log.Info().Err(result.Error).Send()
+		return models.Jobs{}, result.Error
+	}
+
+	return jobData, nil
+}
+
+func (r *Repo) CreateJob(ctx context.Context, jobData models.Jobs) (newModels.ResponseNewJobs, error) {
 	result := r.db.Create(&jobData)
 	if result.Error != nil {
 		log.Info().Err(result.Error).Send()
-		return models.Jobs{}, errors.New("could not create the jobs")
+		return newModels.ResponseNewJobs{}, errors.New("could not create the jobs")
 	}
-	return jobData, nil
+	return newModels.ResponseNewJobs{
+		Jobid: jobData.ID,
+	}, nil
 }
 
 func (r *Repo) ViewJobDetailsBy(ctx context.Context, jid uint64) (models.Jobs, error) {

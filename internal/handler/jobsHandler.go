@@ -60,7 +60,7 @@ func (h *handler) AddJobs(c *gin.Context) {
 		return
 	}
 
-	jobData, err := h.service.AddJobDetails(ctx, bodyJobData, cid)
+	responseData, err := h.service.AddJobDetails(ctx, bodyJobData, cid)
 	if err != nil {
 		log.Error().Err(err).Str("trace id", traceid)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
@@ -69,7 +69,7 @@ func (h *handler) AddJobs(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, jobData)
+	c.JSON(http.StatusOK, responseData)
 
 }
 
