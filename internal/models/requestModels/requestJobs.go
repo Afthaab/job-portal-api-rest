@@ -17,19 +17,3 @@ type NewJobs struct {
 type ResponseNewJobs struct {
 	Jobid uint `json:"jobID"`
 }
-
-// type NewLocation struct {
-// 	PlaceId uint `json:"place_lid"`
-// }
-
-// type NewTechnologyStack struct {
-// 	StackId uint `json:"stack_id"`
-// }
-
-// type NewQualification struct {
-// 	QualificationId uint `json:"qualification_id"`
-// }
-
-// type NewShift struct {
-// 	ShiftId uint `json:"shift_id"`
-// }

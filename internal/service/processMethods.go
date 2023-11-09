@@ -2,106 +2,138 @@ package service
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	"github.com/afthaab/job-portal/internal/models"
 	newModels "github.com/afthaab/job-portal/internal/models/requestModels"
+	"github.com/rs/zerolog/log"
 )
+
+var cacheMap = make(map[uint]models.Jobs)
 
 func (s *Service) ProccessApplication(ctx context.Context, applicationData []newModels.NewUserApplication) ([]newModels.NewUserApplication, error) {
 	var wg = new(sync.WaitGroup)
+	ch := make(chan newModels.NewUserApplication)
 	var finalData []newModels.NewUserApplication
+
 	for _, v := range applicationData {
 		wg.Add(1)
 		go func(v newModels.NewUserApplication) {
 			defer wg.Done()
-			check, v, err := s.compareAndCheck(v)
-			if err != nil {
-				return
+
+			val, exists := cacheMap[v.Jid]
+
+			if !exists {
+				jobData, err := s.UserRepo.GetTheJobData(v.Jid)
+				if err != nil {
+					return
+				}
+				cacheMap[v.Jid] = jobData
+				val = jobData
 			}
+			check := compareAndCheck(v, val)
 			if check {
-				finalData = append(finalData, v)
+				ch <- v
 			}
 		}(v)
-
-		// check, v, err := s.compareAndCheck(v)
-
-		// if err != nil {
-		// 	return nil, err
-		// }
-		// if check {
-		// 	finalData = append(finalData, v)
-		// }
 	}
-	wg.Wait()
+
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+
+	for v := range ch {
+		finalData = append(finalData, v)
+	}
+
 	return finalData, nil
 }
 
-var cacheMap = make(map[uint]models.Jobs)
-
-func (s *Service) compareAndCheck(applicationData newModels.NewUserApplication) (bool, newModels.NewUserApplication, error) {
-	val, exists := cacheMap[applicationData.Jid]
-	if !exists {
-		jobData, err := s.UserRepo.GetTheJobData(applicationData.Jid)
-		if err != nil {
-			return false, newModels.NewUserApplication{}, err
-		}
-		cacheMap[applicationData.Jid] = jobData
-		val = jobData
-	}
+func compareAndCheck(applicationData newModels.NewUserApplication, val models.Jobs) bool {
 	if applicationData.Jobs.Experience < val.MinExperience {
-		return false, newModels.NewUserApplication{}, nil
-	}
-	if applicationData.Jobs.Jobtype != val.Jobtype {
-		return false, newModels.NewUserApplication{}, nil
+		return false
 	}
 	if applicationData.Jobs.NoticePeriod < val.MinNoticePeriod {
-		return false, newModels.NewUserApplication{}, nil
+		log.Info().Err(errors.New("experience did not match")).Send()
+		return false
 	}
-	count := 0
-	for _, v := range applicationData.Jobs.Location {
-		for _, v1 := range val.Location {
-			if v == v1.ID {
-				count++
-			}
-		}
-	}
+	var count int
+	count = compareLocations(applicationData.Jobs.Location, val.Location)
 	if count == 0 {
-		return false, newModels.NewUserApplication{}, nil
-	}
-	count = 0
-	for _, v := range applicationData.Jobs.Qualifications {
-		for _, v1 := range val.Qualifications {
-			if v == v1.ID {
-				count++
-			}
-		}
-	}
-	if count == 0 {
-		return false, newModels.NewUserApplication{}, nil
-	}
-	count = 0
-	for _, v := range applicationData.Jobs.TechnologyStack {
-		for _, v1 := range val.TechnologyStack {
-			if v == v1.ID {
-				count++
-			}
-		}
-	}
-	if count == 0 {
-		return false, newModels.NewUserApplication{}, nil
-	}
-	count = 0
-	for _, v := range applicationData.Jobs.Shift {
-		for _, v1 := range val.Shift {
-			if v == v1.ID {
-				count++
-			}
-		}
-	}
-	if count == 0 {
-		return false, newModels.NewUserApplication{}, nil
+		return false
 	}
 
-	return true, applicationData, nil
+	count = compareQualifications(applicationData.Jobs.Qualifications, val.Qualifications)
+	if count == 0 {
+		return false
+	}
+	count = compareTechStack(applicationData.Jobs.TechnologyStack, val.TechnologyStack)
+	if count == 0 {
+		return false
+	}
+	count = compareShifts(applicationData.Jobs.Shift, val.Shift)
+	if count == 0 {
+		return false
+	}
+
+	return true
 }
+
+func compareLocations(locationsID []uint, val []models.Location) int {
+	count := 0
+	for _, v := range locationsID {
+		for _, v1 := range val {
+			if v == v1.ID {
+				count++
+			}
+		}
+	}
+	return count
+}
+
+func compareQualifications(qualificationID []uint, val []models.Qualification) int {
+	count := 0
+	for _, v := range qualificationID {
+		for _, v1 := range val {
+			if v == v1.ID {
+				count++
+			}
+		}
+	}
+	return count
+}
+
+func compareTechStack(stackID []uint, val []models.TechnologyStack) int {
+	count := 0
+	for _, v := range stackID {
+		for _, v1 := range val {
+			if v == v1.ID {
+				count++
+			}
+		}
+	}
+	return count
+}
+
+func compareShifts(shiftID []uint, val []models.Shift) int {
+	count := 0
+	for _, v := range shiftID {
+		for _, v1 := range val {
+			if v == v1.ID {
+				count++
+			}
+		}
+	}
+	return count
+}
+
+// check, v, err := s.compareAndCheck(v)
+
+// if err != nil {
+// 	return nil, err
+// }
+// if check {
+// 	finalData = append(finalData, v)
+// }

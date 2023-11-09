@@ -35,7 +35,7 @@ func (h *handler) ProcessApplication(c *gin.Context) {
 	if err != nil {
 		log.Error().Err(err).Str("trace id", traceid)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "please provide valid email and password",
+			"error": "please provide valid details",
 		})
 		return
 	}
@@ -44,7 +44,13 @@ func (h *handler) ProcessApplication(c *gin.Context) {
 	if err != nil {
 		log.Error().Err(err).Str("trace id", traceid)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": err,
+			"error": err.Error(),
+		})
+		return
+	}
+	if applicationData == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "no users matched the profie",
 		})
 		return
 	}

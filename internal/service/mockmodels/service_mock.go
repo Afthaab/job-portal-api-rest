@@ -13,6 +13,7 @@ import (
 	reflect "reflect"
 
 	models "github.com/afthaab/job-portal/internal/models"
+	models0 "github.com/afthaab/job-portal/internal/models/requestModels"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -55,10 +56,10 @@ func (mr *MockUserServiceMockRecorder) AddCompanyDetails(ctx, companyData any) *
 }
 
 // AddJobDetails mocks base method.
-func (m *MockUserService) AddJobDetails(ctx context.Context, jobData models.Jobs, cid uint64) (models.Jobs, error) {
+func (m *MockUserService) AddJobDetails(ctx context.Context, jobData models0.NewJobs, cid uint64) (models0.ResponseNewJobs, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddJobDetails", ctx, jobData, cid)
-	ret0, _ := ret[0].(models.Jobs)
+	ret0, _ := ret[0].(models0.ResponseNewJobs)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -67,6 +68,21 @@ func (m *MockUserService) AddJobDetails(ctx context.Context, jobData models.Jobs
 func (mr *MockUserServiceMockRecorder) AddJobDetails(ctx, jobData, cid any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddJobDetails", reflect.TypeOf((*MockUserService)(nil).AddJobDetails), ctx, jobData, cid)
+}
+
+// ProccessApplication mocks base method.
+func (m *MockUserService) ProccessApplication(ctx context.Context, applicationData []models0.NewUserApplication) ([]models0.NewUserApplication, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ProccessApplication", ctx, applicationData)
+	ret0, _ := ret[0].([]models0.NewUserApplication)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ProccessApplication indicates an expected call of ProccessApplication.
+func (mr *MockUserServiceMockRecorder) ProccessApplication(ctx, applicationData any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProccessApplication", reflect.TypeOf((*MockUserService)(nil).ProccessApplication), ctx, applicationData)
 }
 
 // UserSignIn mocks base method.
@@ -172,4 +188,20 @@ func (m *MockUserService) ViewJobById(ctx context.Context, jid uint64) (models.J
 func (mr *MockUserServiceMockRecorder) ViewJobById(ctx, jid any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ViewJobById", reflect.TypeOf((*MockUserService)(nil).ViewJobById), ctx, jid)
+}
+
+// compareAndCheck mocks base method.
+func (m *MockUserService) compareAndCheck(applicationData models0.NewUserApplication) (bool, models0.NewUserApplication, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "compareAndCheck", applicationData)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(models0.NewUserApplication)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// compareAndCheck indicates an expected call of compareAndCheck.
+func (mr *MockUserServiceMockRecorder) compareAndCheck(applicationData any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "compareAndCheck", reflect.TypeOf((*MockUserService)(nil).compareAndCheck), applicationData)
 }
