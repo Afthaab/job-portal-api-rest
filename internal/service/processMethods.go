@@ -2,12 +2,10 @@ package service
 
 import (
 	"context"
-	"errors"
 	"sync"
 
 	"github.com/afthaab/job-portal/internal/models"
 	newModels "github.com/afthaab/job-portal/internal/models/requestModels"
-	"github.com/rs/zerolog/log"
 )
 
 var cacheMap = make(map[uint]models.Jobs)
@@ -56,7 +54,6 @@ func compareAndCheck(applicationData newModels.NewUserApplication, val models.Jo
 		return false
 	}
 	if applicationData.Jobs.NoticePeriod < val.MinNoticePeriod {
-		log.Info().Err(errors.New("experience did not match")).Send()
 		return false
 	}
 	var count int
