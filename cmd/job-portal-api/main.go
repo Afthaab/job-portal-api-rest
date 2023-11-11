@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/afthaab/job-portal/internal/auth"
-	"github.com/afthaab/job-portal/internal/database"
+	"github.com/afthaab/job-portal/internal/cache"
+	database "github.com/afthaab/job-portal/internal/database/postgres"
+	redisDB "github.com/afthaab/job-portal/internal/database/redis"
 	"github.com/afthaab/job-portal/internal/handler"
 	"github.com/afthaab/job-portal/internal/repository"
 	"github.com/afthaab/job-portal/internal/service"
@@ -76,6 +78,11 @@ func StartApp() error {
 		return fmt.Errorf("database is not connected: %w", err)
 	}
 
+	// redis database connection
+	rdb := redisDB.ConnectToRedis()
+
+	redisLayer := cache.NewRDBLayer(rdb)
+
 	// =========================================================================
 	// initialize the repository layer
 	repo, err := repository.NewRepository(db)
@@ -83,7 +90,7 @@ func StartApp() error {
 		return err
 	}
 
-	svc, err := service.NewService(repo, a)
+	svc, err := service.NewService(repo, a, redisLayer)
 	if err != nil {
 		return err
 	}

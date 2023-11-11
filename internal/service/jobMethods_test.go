@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/afthaab/job-portal/internal/auth"
+	"github.com/afthaab/job-portal/internal/cache"
 	newModels "github.com/afthaab/job-portal/internal/models/requestModels"
 	mockrepository "github.com/afthaab/job-portal/internal/repository/mockModels"
 	"go.uber.org/mock/gomock"
@@ -102,7 +103,7 @@ func TestService_AddJobDetails(t *testing.T) {
 			mockRepo := mockrepository.NewMockUserRepo(mc)
 			mockRepo.EXPECT().CreateJob(gomock.Any(), gomock.Any()).Return(tt.mockRepoResponse()).AnyTimes()
 
-			svc, err := NewService(mockRepo, &auth.Auth{})
+			svc, err := NewService(mockRepo, &auth.Auth{}, &cache.RDBLayer{})
 			if err != nil {
 				t.Errorf("error is initializing the repo layer")
 				return

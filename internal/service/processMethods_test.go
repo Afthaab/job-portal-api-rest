@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/afthaab/job-portal/internal/auth"
+	"github.com/afthaab/job-portal/internal/cache"
 	"github.com/afthaab/job-portal/internal/models"
 	newModels "github.com/afthaab/job-portal/internal/models/requestModels"
 	mockrepository "github.com/afthaab/job-portal/internal/repository/mockModels"
@@ -797,7 +798,7 @@ func TestService_ProccessApplication(t *testing.T) {
 				}
 			}
 
-			svc, err := NewService(mockRepo, &auth.Auth{})
+			svc, err := NewService(mockRepo, &auth.Auth{}, &cache.RDBLayer{})
 			if err != nil {
 				t.Errorf("error is initializing the repo layer")
 				return

@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/afthaab/job-portal/internal/auth"
+	"github.com/afthaab/job-portal/internal/cache"
 	"github.com/afthaab/job-portal/internal/models"
 	newModels "github.com/afthaab/job-portal/internal/models/requestModels"
 	"github.com/afthaab/job-portal/internal/repository"
@@ -13,6 +14,7 @@ import (
 type Service struct {
 	UserRepo repository.UserRepo
 	auth     auth.Authentication
+	rdb      cache.Caching
 }
 
 //go:generate mockgen -source=service.go -destination=mockmodels/service_mock.go -package=mockmodels
@@ -33,12 +35,13 @@ type UserService interface {
 	ProccessApplication(ctx context.Context, applicationData []newModels.NewUserApplication) ([]newModels.NewUserApplication, error)
 }
 
-func NewService(userRepo repository.UserRepo, a auth.Authentication) (UserService, error) {
+func NewService(userRepo repository.UserRepo, a auth.Authentication, rdb cache.Caching) (UserService, error) {
 	if userRepo == nil {
 		return nil, errors.New("interface cannot be null")
 	}
 	return &Service{
 		UserRepo: userRepo,
 		auth:     a,
+		rdb:      rdb,
 	}, nil
 }

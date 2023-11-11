@@ -189,19 +189,3 @@ func (mr *MockUserServiceMockRecorder) ViewJobById(ctx, jid any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ViewJobById", reflect.TypeOf((*MockUserService)(nil).ViewJobById), ctx, jid)
 }
-
-// compareAndCheck mocks base method.
-func (m *MockUserService) compareAndCheck(applicationData models0.NewUserApplication) (bool, models0.NewUserApplication, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "compareAndCheck", applicationData)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(models0.NewUserApplication)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// compareAndCheck indicates an expected call of compareAndCheck.
-func (mr *MockUserServiceMockRecorder) compareAndCheck(applicationData any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "compareAndCheck", reflect.TypeOf((*MockUserService)(nil).compareAndCheck), applicationData)
-}
