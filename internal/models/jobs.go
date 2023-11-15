@@ -6,18 +6,18 @@ import (
 
 type Jobs struct {
 	gorm.Model
-	Company         Company           `json:"-" gorm:"ForeignKey:cid"`
+	Company         Company           `json:"company" gorm:"ForeignKey:cid"`
 	Cid             uint              `json:"cid"`
 	Jobname         string            `json:"jobname" validate:"required"`
 	MinNoticePeriod uint              `json:"min_notice_period" validate:"required"`
 	MaxNoticePeriod uint              `json:"max_notice_period" validate:"required"`
-	Location        []Location        `json:"-" gorm:"many2many:job_location;"`
-	TechnologyStack []TechnologyStack `json:"-" gorm:"many2many:job_techstack;"`
+	Location        []Location        `json:"location" gorm:"many2many:job_location;"`
+	TechnologyStack []TechnologyStack `json:"technologyStack" gorm:"many2many:job_techstack;"`
 	Description     string            `json:"description" validate:"required"`
 	MinExperience   uint              `json:"min_experience" validate:"required"`
 	MaxExperience   uint              `json:"max_experience" validate:"required"`
-	Qualifications  []Qualification   `json:"-" gorm:"many2many:job_qualification;"`
-	Shift           []Shift           `json:"-" gorm:"many2many:job_shift;" `
+	Qualifications  []Qualification   `json:"qualifications" gorm:"many2many:job_qualification;"`
+	Shift           []Shift           `json:"shifts" gorm:"many2many:job_shift;" `
 	Jobtype         string            `json:"jobtype" validate:"required"`
 }
 

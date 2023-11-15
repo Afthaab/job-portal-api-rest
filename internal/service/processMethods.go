@@ -10,8 +10,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-var cacheMap = make(map[uint]models.Jobs)
-
 func (s *Service) ProccessApplication(ctx context.Context, applicationData []newModels.NewUserApplication) ([]newModels.NewUserApplication, error) {
 	var wg = new(sync.WaitGroup)
 	ch := make(chan newModels.NewUserApplication)
@@ -21,36 +19,28 @@ func (s *Service) ProccessApplication(ctx context.Context, applicationData []new
 		wg.Add(1)
 		go func(v newModels.NewUserApplication) {
 			defer wg.Done()
-
+			var jobData models.Jobs
 			val, err := s.rdb.GetTheCacheData(ctx, v.Jid)
 			if err == redis.Nil {
-				jobData, err := s.UserRepo.GetTheJobData(v.Jid)
+				dbData, err := s.UserRepo.GetTheJobData(v.Jid)
 				if err != nil {
 					return
 				}
-				err = s.rdb.AddToTheCache(ctx, v.Jid, jobData)
+				err = s.rdb.AddToTheCache(ctx, v.Jid, dbData)
+				if err != nil {
+					return
+				}
+				jobData = dbData
+			} else {
+				err = json.Unmarshal([]byte(val), &jobData)
+				if err == redis.Nil {
+					return
+				}
 				if err != nil {
 					return
 				}
 			}
-			err = json.Unmarshal([]byte(val), &models.Jobs{})
-			if err != nil {
-				return
-			}
-			// val, exists := cacheMap[v.Jid]
-
-			if !exists {
-				jobData, err := s.UserRepo.GetTheJobData(v.Jid)
-				if err != nil {
-					return
-				}
-				err = s.rdb.AddToTheCache(ctx, v.Jid, jobData)
-				if err != nil {
-					return
-				}
-				val = jobData
-			}
-			check := compareAndCheck(v, val)
+			check := compareAndCheck(v, jobData)
 			if check {
 				ch <- v
 			}

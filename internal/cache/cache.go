@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"encoding/json"
 	"strconv"
 	"time"
 
@@ -26,7 +27,11 @@ func NewRDBLayer(rdb *redis.Client) Caching {
 
 func (c *RDBLayer) AddToTheCache(ctx context.Context, jid uint, jobData models.Jobs) error {
 	jobID := strconv.FormatUint(uint64(jid), 10)
-	err := c.rdb.Set(ctx, jobID, jobData, 1*time.Minute).Err()
+	val, err := json.Marshal(jobData)
+	if err != nil {
+		return err
+	}
+	err = c.rdb.Set(ctx, jobID, val, 1*time.Minute).Err()
 	return err
 }
 

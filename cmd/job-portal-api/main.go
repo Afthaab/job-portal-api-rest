@@ -132,6 +132,7 @@ func StartApp() error {
 			return fmt.Errorf("could not stop server gracefully : %w", err)
 		}
 	}
+
 	return nil
 
 }

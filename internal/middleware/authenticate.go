@@ -13,6 +13,7 @@ import (
 
 func (m *Mid) Authenticate(next gin.HandlerFunc) gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		ctx := c.Request.Context()
 
 		traceID, ok := ctx.Value(TraceIDKey).(string)
