@@ -7,10 +7,11 @@ import (
 	"testing"
 
 	"github.com/afthaab/job-portal/internal/auth"
-	"github.com/afthaab/job-portal/internal/cache"
+	"github.com/afthaab/job-portal/internal/cache/mockmodels"
 	"github.com/afthaab/job-portal/internal/models"
 	newModels "github.com/afthaab/job-portal/internal/models/requestModels"
-	mockrepository "github.com/afthaab/job-portal/internal/repository/mockModels"
+	cachMock "github.com/afthaab/job-portal/internal/repository/mockModels"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/mock/gomock"
 	"gorm.io/gorm"
 )
@@ -21,788 +22,134 @@ func TestService_ProccessApplication(t *testing.T) {
 		applicationData []newModels.NewUserApplication
 	}
 	tests := []struct {
-		name             string
-		args             args
-		want             []newModels.NewUserApplication
-		wantErr          bool
-		mockRepoResponse func() (models.Jobs, error)
+		name              string
+		args              args
+		want              []newModels.NewUserApplication
+		mockRepoResponse  func() (models.Jobs, error)
+		mockCacheResponse func() (string, error)
+		wantErr           bool
 	}{
 		{
-			name: "error from mock function",
+			name: "not found in redis and in database",
 			args: args{
 				ctx: context.Background(),
 				applicationData: []newModels.NewUserApplication{
 					{
-						Name: "Afthab",
-						Age:  "22",
+						Name: "afthab",
+						Age:  "21",
 						Jid:  1,
 						Jobs: newModels.Requestfield{
-							Jobname:      "web developer",
-							NoticePeriod: uint(10),
-							Location: []uint{
-								uint(1), uint(2),
-							},
-							TechnologyStack: []uint{
-								uint(1), uint(2),
-							},
-							Experience: uint(10),
-							Qualifications: []uint{
-								uint(1), uint(2),
-							},
-							Shift: []uint{
-								uint(1), uint(2),
-							},
-							Jobtype: "daily shift",
+							Jobname:         "senior web developer",
+							NoticePeriod:    7,
+							Location:        []uint{1, 2},
+							TechnologyStack: []uint{1, 2},
+							Experience:      uint(5),
+							Qualifications:  []uint{1, 2},
+							Shift:           []uint{1, 2},
+							Jobtype:         "permanent",
 						},
 					},
 				},
 			},
-			want:    nil,
-			wantErr: false,
-			mockRepoResponse: func() (models.Jobs, error) {
-				return models.Jobs{}, errors.New("test error from mock function")
+			want: nil,
+			mockCacheResponse: func() (string, error) {
+				return "", redis.Nil
 			},
+			mockRepoResponse: func() (models.Jobs, error) {
+				return models.Jobs{}, errors.New("test error from cache mock")
+			},
+			wantErr: false,
 		},
 		{
-			name: "failure in checking the job experience",
+			name: "not found in redis and in database",
 			args: args{
 				ctx: context.Background(),
 				applicationData: []newModels.NewUserApplication{
 					{
-						Name: "Afthab",
-						Age:  "22",
+						Name: "afthab",
+						Age:  "21",
 						Jid:  1,
 						Jobs: newModels.Requestfield{
-							Jobname:      "web developer",
-							NoticePeriod: uint(10),
-							Location: []uint{
-								uint(1), uint(2),
-							},
-							TechnologyStack: []uint{
-								uint(1), uint(2),
-							},
-							Experience: uint(3),
-							Qualifications: []uint{
-								uint(1), uint(2),
-							},
-							Shift: []uint{
-								uint(1), uint(2),
-							},
-							Jobtype: "daily shift",
+							Jobname:         "senior web developer",
+							NoticePeriod:    7,
+							Location:        []uint{1, 2},
+							TechnologyStack: []uint{1, 2},
+							Experience:      uint(5),
+							Qualifications:  []uint{1, 2},
+							Shift:           []uint{1, 2},
+							Jobtype:         "permanent",
 						},
 					},
 				},
 			},
-			want:    nil,
-			wantErr: false,
+			want: nil,
+			mockCacheResponse: func() (string, error) {
+				return "", redis.Nil
+			},
 			mockRepoResponse: func() (models.Jobs, error) {
 				return models.Jobs{
 					Model: gorm.Model{
 						ID: 1,
 					},
-					Company: models.Company{
-						Model: gorm.Model{
-							ID: 1,
-						},
-					},
-					Cid:             1,
-					Jobname:         "web developer",
+					Jobname:         "senior web developer",
 					MinNoticePeriod: uint(5),
-					MaxNoticePeriod: uint(20),
+					MaxNoticePeriod: uint(10),
 					Location: []models.Location{
 						{
-							Model: gorm.Model{
-								ID: 1,
-							},
+							Model: gorm.Model{ID: 1},
 						},
 						{
-							Model: gorm.Model{
-								ID: 2,
-							},
+							Model: gorm.Model{ID: 2},
 						},
 					},
 					TechnologyStack: []models.TechnologyStack{
 						{
-							Model: gorm.Model{
-								ID: 1,
-							},
+							Model: gorm.Model{ID: 1},
 						},
 						{
-							Model: gorm.Model{
-								ID: 2,
-							},
+							Model: gorm.Model{ID: 2},
 						},
 					},
-					Description:   "test description",
-					MinExperience: 5,
-					MaxExperience: 15,
+					MinExperience: uint(3),
+					MaxExperience: uint(10),
 					Qualifications: []models.Qualification{
 						{
-							Model: gorm.Model{
-								ID: 1,
-							},
+							Model: gorm.Model{ID: 1},
 						},
 						{
-							Model: gorm.Model{
-								ID: 2,
-							},
+							Model: gorm.Model{ID: 2},
 						},
 					},
 					Shift: []models.Shift{
 						{
-							Model: gorm.Model{
-								ID: 1,
-							},
+							Model: gorm.Model{ID: 1},
 						},
 						{
-							Model: gorm.Model{
-								ID: 2,
-							},
+							Model: gorm.Model{ID: 2},
 						},
 					},
-					Jobtype: "test job type",
+					Jobtype: "permanent",
 				}, nil
 			},
-		},
-		{
-			name: "failure in checking the notice period",
-			args: args{
-				ctx: context.Background(),
-				applicationData: []newModels.NewUserApplication{
-					{
-						Name: "Afthab",
-						Age:  "22",
-						Jid:  1,
-						Jobs: newModels.Requestfield{
-							Jobname:      "web developer",
-							NoticePeriod: uint(1),
-							Location: []uint{
-								uint(1), uint(2),
-							},
-							TechnologyStack: []uint{
-								uint(1), uint(2),
-							},
-							Experience: uint(7),
-							Qualifications: []uint{
-								uint(1), uint(2),
-							},
-							Shift: []uint{
-								uint(1), uint(2),
-							},
-							Jobtype: "daily shift",
-						},
-					},
-				},
-			},
-			want:    nil,
 			wantErr: false,
-			mockRepoResponse: func() (models.Jobs, error) {
-				return models.Jobs{
-					Model: gorm.Model{
-						ID: 1,
-					},
-					Company: models.Company{
-						Model: gorm.Model{
-							ID: 1,
-						},
-					},
-					Cid:             1,
-					Jobname:         "web developer",
-					MinNoticePeriod: uint(5),
-					MaxNoticePeriod: uint(20),
-					Location: []models.Location{
-						{
-							Model: gorm.Model{
-								ID: 1,
-							},
-						},
-						{
-							Model: gorm.Model{
-								ID: 2,
-							},
-						},
-					},
-					TechnologyStack: []models.TechnologyStack{
-						{
-							Model: gorm.Model{
-								ID: 1,
-							},
-						},
-						{
-							Model: gorm.Model{
-								ID: 2,
-							},
-						},
-					},
-					Description:   "test description",
-					MinExperience: 5,
-					MaxExperience: 15,
-					Qualifications: []models.Qualification{
-						{
-							Model: gorm.Model{
-								ID: 1,
-							},
-						},
-						{
-							Model: gorm.Model{
-								ID: 2,
-							},
-						},
-					},
-					Shift: []models.Shift{
-						{
-							Model: gorm.Model{
-								ID: 1,
-							},
-						},
-						{
-							Model: gorm.Model{
-								ID: 2,
-							},
-						},
-					},
-					Jobtype: "test job type",
-				}, nil
-			},
 		},
-		{
-			name: "failure in checking the locations",
-			args: args{
-				ctx: context.Background(),
-				applicationData: []newModels.NewUserApplication{
-					{
-						Name: "Afthab",
-						Age:  "22",
-						Jid:  1,
-						Jobs: newModels.Requestfield{
-							Jobname:      "web developer",
-							NoticePeriod: uint(6),
-							Location:     []uint{},
-							TechnologyStack: []uint{
-								uint(1), uint(2),
-							},
-							Experience: uint(7),
-							Qualifications: []uint{
-								uint(1), uint(2),
-							},
-							Shift: []uint{
-								uint(1), uint(2),
-							},
-							Jobtype: "daily shift",
-						},
-					},
-				},
-			},
-			want:    nil,
-			wantErr: false,
-			mockRepoResponse: func() (models.Jobs, error) {
-				return models.Jobs{
-					Model: gorm.Model{
-						ID: 1,
-					},
-					Company: models.Company{
-						Model: gorm.Model{
-							ID: 1,
-						},
-					},
-					Cid:             1,
-					Jobname:         "web developer",
-					MinNoticePeriod: uint(5),
-					MaxNoticePeriod: uint(20),
-					Location: []models.Location{
-						{
-							Model: gorm.Model{
-								ID: 1,
-							},
-						},
-						{
-							Model: gorm.Model{
-								ID: 2,
-							},
-						},
-					},
-					TechnologyStack: []models.TechnologyStack{
-						{
-							Model: gorm.Model{
-								ID: 1,
-							},
-						},
-						{
-							Model: gorm.Model{
-								ID: 2,
-							},
-						},
-					},
-					Description:   "test description",
-					MinExperience: 5,
-					MaxExperience: 15,
-					Qualifications: []models.Qualification{
-						{
-							Model: gorm.Model{
-								ID: 1,
-							},
-						},
-						{
-							Model: gorm.Model{
-								ID: 2,
-							},
-						},
-					},
-					Shift: []models.Shift{
-						{
-							Model: gorm.Model{
-								ID: 1,
-							},
-						},
-						{
-							Model: gorm.Model{
-								ID: 2,
-							},
-						},
-					},
-					Jobtype: "test job type",
-				}, nil
-			},
-		},
-		{
-			name: "failure in checking the qualifications",
-			args: args{
-				ctx: context.Background(),
-				applicationData: []newModels.NewUserApplication{
-					{
-						Name: "Afthab",
-						Age:  "22",
-						Jid:  1,
-						Jobs: newModels.Requestfield{
-							Jobname:      "web developer",
-							NoticePeriod: uint(6),
-							Location: []uint{
-								uint(1), uint(2),
-							},
-							TechnologyStack: []uint{
-								uint(1), uint(2),
-							},
-							Experience:     uint(7),
-							Qualifications: []uint{},
-							Shift: []uint{
-								uint(1), uint(2),
-							},
-							Jobtype: "daily shift",
-						},
-					},
-				},
-			},
-			want:    nil,
-			wantErr: false,
-			mockRepoResponse: func() (models.Jobs, error) {
-				return models.Jobs{
-					Model: gorm.Model{
-						ID: 1,
-					},
-					Company: models.Company{
-						Model: gorm.Model{
-							ID: 1,
-						},
-					},
-					Cid:             1,
-					Jobname:         "web developer",
-					MinNoticePeriod: uint(5),
-					MaxNoticePeriod: uint(20),
-					Location: []models.Location{
-						{
-							Model: gorm.Model{
-								ID: 1,
-							},
-						},
-						{
-							Model: gorm.Model{
-								ID: 2,
-							},
-						},
-					},
-					TechnologyStack: []models.TechnologyStack{
-						{
-							Model: gorm.Model{
-								ID: 1,
-							},
-						},
-						{
-							Model: gorm.Model{
-								ID: 2,
-							},
-						},
-					},
-					Description:   "test description",
-					MinExperience: 5,
-					MaxExperience: 15,
-					Qualifications: []models.Qualification{
-						{
-							Model: gorm.Model{
-								ID: 1,
-							},
-						},
-						{
-							Model: gorm.Model{
-								ID: 2,
-							},
-						},
-					},
-					Shift: []models.Shift{
-						{
-							Model: gorm.Model{
-								ID: 1,
-							},
-						},
-						{
-							Model: gorm.Model{
-								ID: 2,
-							},
-						},
-					},
-					Jobtype: "test job type",
-				}, nil
-			},
-		},
-		{
-			name: "failure in checking the technologies",
-			args: args{
-				ctx: context.Background(),
-				applicationData: []newModels.NewUserApplication{
-					{
-						Name: "Afthab",
-						Age:  "22",
-						Jid:  1,
-						Jobs: newModels.Requestfield{
-							Jobname:      "web developer",
-							NoticePeriod: uint(6),
-							Location: []uint{
-								uint(1), uint(2),
-							},
-							TechnologyStack: []uint{},
-							Experience:      uint(7),
-							Qualifications: []uint{
-								uint(1), uint(2),
-							},
-							Shift: []uint{
-								uint(1), uint(2),
-							},
-							Jobtype: "daily shift",
-						},
-					},
-				},
-			},
-			want:    nil,
-			wantErr: false,
-			mockRepoResponse: func() (models.Jobs, error) {
-				return models.Jobs{
-					Model: gorm.Model{
-						ID: 1,
-					},
-					Company: models.Company{
-						Model: gorm.Model{
-							ID: 1,
-						},
-					},
-					Cid:             1,
-					Jobname:         "web developer",
-					MinNoticePeriod: uint(5),
-					MaxNoticePeriod: uint(20),
-					Location: []models.Location{
-						{
-							Model: gorm.Model{
-								ID: 1,
-							},
-						},
-						{
-							Model: gorm.Model{
-								ID: 2,
-							},
-						},
-					},
-					TechnologyStack: []models.TechnologyStack{
-						{
-							Model: gorm.Model{
-								ID: 1,
-							},
-						},
-						{
-							Model: gorm.Model{
-								ID: 2,
-							},
-						},
-					},
-					Description:   "test description",
-					MinExperience: 5,
-					MaxExperience: 15,
-					Qualifications: []models.Qualification{
-						{
-							Model: gorm.Model{
-								ID: 1,
-							},
-						},
-						{
-							Model: gorm.Model{
-								ID: 2,
-							},
-						},
-					},
-					Shift: []models.Shift{
-						{
-							Model: gorm.Model{
-								ID: 1,
-							},
-						},
-						{
-							Model: gorm.Model{
-								ID: 2,
-							},
-						},
-					},
-					Jobtype: "test job type",
-				}, nil
-			},
-		},
-		// {
-		// 	name: "success from mock",
-		// 	args: args{
-		// 		ctx: context.Background(),
-		// 		applicationData: []newModels.NewUserApplication{
-		// 			{
-		// 				Name: "Afthab",
-		// 				Age:  "22",
-		// 				Jid:  1,
-		// 				Jobs: newModels.Requestfield{
-		// 					Jobname:      "web developer",
-		// 					NoticePeriod: uint(10),
-		// 					Location: []uint{
-		// 						uint(1), uint(2),
-		// 					},
-		// 					TechnologyStack: []uint{
-		// 						uint(1), uint(2),
-		// 					},
-		// 					Experience: uint(7),
-		// 					Qualifications: []uint{
-		// 						uint(1), uint(2),
-		// 					},
-		// 					Shift: []uint{
-		// 						uint(1), uint(2),
-		// 					},
-		// 					Jobtype: "daily shift",
-		// 				},
-		// 			},
-		// 			{
-		// 				Name: "Jeevan",
-		// 				Age:  "22",
-		// 				Jid:  2,
-		// 				Jobs: newModels.Requestfield{
-		// 					Jobname:      "web developer",
-		// 					NoticePeriod: uint(10),
-		// 					Location: []uint{
-		// 						uint(1), uint(2),
-		// 					},
-		// 					TechnologyStack: []uint{
-		// 						uint(1), uint(2),
-		// 					},
-		// 					Experience: uint(7),
-		// 					Qualifications: []uint{
-		// 						uint(1), uint(2),
-		// 					},
-		// 					Shift: []uint{
-		// 						uint(1), uint(2),
-		// 					},
-		// 					Jobtype: "daily shift",
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// 	want: []newModels.NewUserApplication{
-		// 		{
-		// 			Name: "Afthab",
-		// 			Age:  "22",
-		// 			Jid:  1,
-		// 			Jobs: newModels.Requestfield{
-		// 				Jobname:         "web developer",
-		// 				NoticePeriod:    uint(10),
-		// 				Location:        []uint{1, 2},
-		// 				TechnologyStack: []uint{1, 2},
-		// 				Experience:      7,
-		// 				Qualifications:  []uint{1, 2},
-		// 				Shift:           []uint{1, 2},
-		// 				Jobtype:         "daily shift",
-		// 			},
-		// 		},
-		// 		{
-		// 			Name: "Jeevan",
-		// 			Age:  "22",
-		// 			Jid:  2,
-		// 			Jobs: newModels.Requestfield{
-		// 				Jobname:         "web developer",
-		// 				NoticePeriod:    uint(10),
-		// 				Location:        []uint{1, 2},
-		// 				TechnologyStack: []uint{1, 2},
-		// 				Experience:      7,
-		// 				Qualifications:  []uint{1, 2},
-		// 				Shift:           []uint{1, 2},
-		// 				Jobtype:         "daily shift",
-		// 			},
-		// 		},
-		// 	},
-		// 	wantErr:          false,
-		// 	mockRepoResponse: nil,
-		// },
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mc := gomock.NewController(t)
-			mockRepo := mockrepository.NewMockUserRepo(mc)
-			if tt.mockRepoResponse != nil {
-				mockRepo.EXPECT().GetTheJobData(gomock.Any()).Return(tt.mockRepoResponse()).AnyTimes()
-			}
+			mockCach := mockmodels.NewMockCaching(mc)
+			mockCach.EXPECT().GetTheCacheData(gomock.Any(), gomock.Any()).Return(tt.mockCacheResponse()).AnyTimes()
+			mockCach.EXPECT().AddToTheCache(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("test error")).AnyTimes()
 
-			for _, v := range tt.args.applicationData {
-				if v.Jid == uint(1) {
-					mockRepo.EXPECT().GetTheJobData(v.Jid).Return(models.Jobs{
-						Model: gorm.Model{
-							ID: 1,
-						},
-						Company: models.Company{
-							Model: gorm.Model{
-								ID: 1,
-							},
-						},
-						Cid:             1,
-						Jobname:         "web developer",
-						MinNoticePeriod: uint(5),
-						MaxNoticePeriod: uint(20),
-						Location: []models.Location{
-							{
-								Model: gorm.Model{
-									ID: 1,
-								},
-							},
-							{
-								Model: gorm.Model{
-									ID: 2,
-								},
-							},
-						},
-						TechnologyStack: []models.TechnologyStack{
-							{
-								Model: gorm.Model{
-									ID: 1,
-								},
-							},
-							{
-								Model: gorm.Model{
-									ID: 2,
-								},
-							},
-						},
-						Description:   "test description",
-						MinExperience: 5,
-						MaxExperience: 15,
-						Qualifications: []models.Qualification{
-							{
-								Model: gorm.Model{
-									ID: 1,
-								},
-							},
-							{
-								Model: gorm.Model{
-									ID: 2,
-								},
-							},
-						},
-						Shift: []models.Shift{
-							{
-								Model: gorm.Model{
-									ID: 1,
-								},
-							},
-							{
-								Model: gorm.Model{
-									ID: 2,
-								},
-							},
-						},
-						Jobtype: "test job type",
-					}, nil).AnyTimes()
-				}
-				if v.Jid == uint(2) {
-					mockRepo.EXPECT().GetTheJobData(v.Jid).Return(models.Jobs{
-						Model: gorm.Model{
-							ID: 1,
-						},
-						Company: models.Company{
-							Model: gorm.Model{
-								ID: 1,
-							},
-						},
-						Cid:             1,
-						Jobname:         "web developer",
-						MinNoticePeriod: uint(5),
-						MaxNoticePeriod: uint(20),
-						Location: []models.Location{
-							{
-								Model: gorm.Model{
-									ID: 1,
-								},
-							},
-							{
-								Model: gorm.Model{
-									ID: 2,
-								},
-							},
-						},
-						TechnologyStack: []models.TechnologyStack{
-							{
-								Model: gorm.Model{
-									ID: 1,
-								},
-							},
-							{
-								Model: gorm.Model{
-									ID: 2,
-								},
-							},
-						},
-						Description:   "test description",
-						MinExperience: 5,
-						MaxExperience: 15,
-						Qualifications: []models.Qualification{
-							{
-								Model: gorm.Model{
-									ID: 1,
-								},
-							},
-							{
-								Model: gorm.Model{
-									ID: 2,
-								},
-							},
-						},
-						Shift: []models.Shift{
-							{
-								Model: gorm.Model{
-									ID: 1,
-								},
-							},
-							{
-								Model: gorm.Model{
-									ID: 2,
-								},
-							},
-						},
-						Jobtype: "test job type",
-					}, nil)
-				}
-			}
+			mockRepo := cachMock.NewMockUserRepo(mc)
+			mockRepo.EXPECT().GetTheJobData(gomock.Any()).Return(tt.mockRepoResponse()).AnyTimes()
 
-			svc, err := NewService(mockRepo, &auth.Auth{}, &cache.RDBLayer{})
+			svc, err := NewService(mockRepo, &auth.Auth{}, mockCach)
 			if err != nil {
-				t.Errorf("error is initializing the repo layer")
+				t.Error("could not initialize the mock repo layer")
 				return
 			}
+
 			got, err := svc.ProccessApplication(tt.args.ctx, tt.args.applicationData)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.ProccessApplication() error = %v, wantErr %v", err, tt.wantErr)

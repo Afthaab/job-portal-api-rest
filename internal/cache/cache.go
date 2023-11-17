@@ -14,6 +14,8 @@ type RDBLayer struct {
 	rdb *redis.Client
 }
 
+//go:generate mockgen -source=cache.go -destination=mockmodels/cache_mock.go -package=mockmodels
+
 type Caching interface {
 	AddToTheCache(ctx context.Context, jid uint, jobData models.Jobs) error
 	GetTheCacheData(ctx context.Context, jid uint) (string, error)

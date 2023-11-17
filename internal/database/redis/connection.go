@@ -11,4 +11,5 @@ func ConnectToRedis() *redis.Client {
 		DB:       0,  // use default DB
 	})
 	return rdb
+
 }

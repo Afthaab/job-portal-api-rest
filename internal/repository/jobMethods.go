@@ -64,7 +64,7 @@ func (r *Repo) FindAllJobs(ctx context.Context) ([]models.Jobs, error) {
 func (r *Repo) FindJob(ctx context.Context, cid uint64) ([]models.Jobs, error) {
 	var jobData []models.Jobs
 	result := r.db.Where("cid = ?", cid).Find(&jobData)
-	if result.Error != nil {
+	if result.Error != nil || result.RowsAffected == 0 {
 		log.Info().Err(result.Error).Send()
 		return nil, errors.New("could not find the company")
 	}

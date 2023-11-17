@@ -14,7 +14,6 @@ func (s *Service) ProccessApplication(ctx context.Context, applicationData []new
 	var wg = new(sync.WaitGroup)
 	ch := make(chan newModels.NewUserApplication)
 	var finalData []newModels.NewUserApplication
-
 	for _, v := range applicationData {
 		wg.Add(1)
 		go func(v newModels.NewUserApplication) {
@@ -33,9 +32,6 @@ func (s *Service) ProccessApplication(ctx context.Context, applicationData []new
 				jobData = dbData
 			} else {
 				err = json.Unmarshal([]byte(val), &jobData)
-				if err == redis.Nil {
-					return
-				}
 				if err != nil {
 					return
 				}
@@ -84,7 +80,6 @@ func compareAndCheck(applicationData newModels.NewUserApplication, val models.Jo
 	if count == 0 {
 		return false
 	}
-
 	return true
 }
 
