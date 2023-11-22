@@ -81,6 +81,12 @@ func StartApp() error {
 	// redis database connection
 	rdb := redisDB.ConnectToRedis()
 
+	_, err = rdb.Ping(ctx).Result()
+
+	if err != nil {
+		return fmt.Errorf("redis  is not connected: %w", err)
+	}
+
 	redisLayer := cache.NewRDBLayer(rdb)
 
 	// =========================================================================
