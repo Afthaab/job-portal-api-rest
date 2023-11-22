@@ -48,12 +48,6 @@ func (h *handler) ProcessApplication(c *gin.Context) {
 		})
 		return
 	}
-	if applicationData == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "no users matched the profie",
-		})
-		return
-	}
 
 	c.JSON(http.StatusOK, applicationData)
 
